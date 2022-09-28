@@ -13,10 +13,12 @@ public class FPSController : MonoBehaviour
     [SerializeField] private float LookUpConstraint = 60f;
     [SerializeField] private bool invertMouse;
 
-
+    [SerializeField] private GameObject bulletImpact;
+    [SerializeField] private float bulletImpactDuration = 5f;
 
     private CharacterController charController;
     private float verticalRotationStore;
+
     private Camera mainCam;
 
     // Start is called before the first frame update
@@ -24,7 +26,6 @@ public class FPSController : MonoBehaviour
     {
         charController = GetComponent<CharacterController>();
         mainCam = Camera.main;
-        Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
@@ -33,6 +34,8 @@ public class FPSController : MonoBehaviour
     {
         Movement();
         MouseLook();
+        if (Input.GetButton("Fire1"))
+            Shoot();
     }
 
     private void LateUpdate()
@@ -60,5 +63,15 @@ public class FPSController : MonoBehaviour
         verticalRotationStore += mouseInput.y * invert;
         verticalRotationStore = Mathf.Clamp(verticalRotationStore, LookDownConstraint, LookUpConstraint);
         camController.rotation = Quaternion.Euler(verticalRotationStore, camController.eulerAngles.y, camController.eulerAngles.z);
+    }
+
+    private void Shoot()
+    {
+        Ray rayShot = mainCam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0f));
+        if (Physics.Raycast(rayShot, out RaycastHit hit))
+        {
+            GameObject impact = Instantiate(bulletImpact, hit.point + (hit.normal * 0.002f), Quaternion.LookRotation(hit.normal, Vector3.up));
+            Destroy(impact, bulletImpactDuration);
+        }
     }
 }
