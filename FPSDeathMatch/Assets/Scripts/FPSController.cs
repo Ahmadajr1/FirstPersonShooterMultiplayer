@@ -16,6 +16,7 @@ public class FPSController : MonoBehaviour
     [SerializeField] private GameObject bulletImpact;
     [SerializeField] private float bulletImpactDuration = 5f;
     [SerializeField] private float firingRate = 1f;
+    [SerializeField] private Gun gun;
 
     private CharacterController charController;
     private float verticalRotationStore;
@@ -86,7 +87,7 @@ public class FPSController : MonoBehaviour
     private void Shoot()
     {
         Ray rayShot = mainCam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0f));
-
+        gun.Flash();
         if (Physics.Raycast(rayShot, out RaycastHit hit))
         {
             GameObject impact = Instantiate(bulletImpact, hit.point + (hit.normal * 0.002f), Quaternion.LookRotation(hit.normal, Vector3.up));
