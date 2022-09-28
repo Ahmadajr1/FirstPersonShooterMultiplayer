@@ -22,16 +22,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #endregion
 
     #region Canvases and UI
+    [Header("Panels")]
     [SerializeField] private GameObject LoadingPanel;
     [SerializeField] private GameObject MainMenuCanvas;
     [SerializeField] private GameObject FindRoomCanvas;
     [SerializeField] private GameObject CreateRoomCanvas;
+    [SerializeField] private GameObject RoomCanvas;
     [SerializeField] private GameObject ErrorCanvas;
+
+    [Header("Text Fields")]
     [SerializeField] private TextMeshProUGUI loadingText;
     [SerializeField] private TextMeshProUGUI roomNameText;
-    [SerializeField] private TMP_InputField createRoomInputField;
     [SerializeField] private TextMeshProUGUI errorText;
+    [SerializeField] private TMP_InputField createRoomInputField;
+
+    [Header("References")]
+    [SerializeField] private RoomButton RoomReference;
+
     #endregion
+
+    List<RoomButton> RoomsList = new List<RoomButton>();
 
     #region Unity Methods
     // Start is called before the first frame update
@@ -71,6 +81,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
     }
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+        foreach(RoomButton roomButton in RoomsList)
+        {
+            Destroy(roomButton.gameObject);
+        }
+
+        RoomsList.Clear();
+
+        foreach (RoomInfo roomInfo in roomList)
+        {
+            if (roomInfo.PlayerCount < roomInfo.MaxPlayers && !roomInfo.RemovedFromList)
+            {
+                RoomButton tempButton = Instantiate(RoomReference, RoomReference.transform.parent);
+                tempButton.SetRoomInfo(roomInfo);
+                tempButton.gameObject.SetActive(true);
+                RoomsList.Add(tempButton);
+            }
+        }
+    }
     #endregion
 
     #region Custom Methods
@@ -81,30 +111,43 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         MainMenuCanvas.SetActive(false);
         FindRoomCanvas.SetActive(false);
         CreateRoomCanvas.SetActive(false);
+        RoomCanvas.SetActive(false);
         ErrorCanvas.SetActive(false);
     }
 
-    public void OpenMainMenuButtons()
+    public void OpenMainMenuPanel()
     {
+        CloseAllMenus();
         MainMenuCanvas.SetActive(true);
     }
 
     public void OpenLoadingPanel(string message)
     {
+        CloseAllMenus();
         LoadingPanel.SetActive(true);
     }
 
-    public void OpenRoomPanel()
+    public void OpenFindRoomPanel()
     {
+        CloseAllMenus();
         FindRoomCanvas.SetActive(true);
     }
     public void OpenCreateRoomPanel()
     {
+        CloseAllMenus();
         CreateRoomCanvas.SetActive(true);
+    }
+
+    public void OpenRoomPanel(string roomName)
+    {
+        CloseAllMenus();
+        RoomCanvas.SetActive(true);
+        roomNameText.text = roomName;
     }
 
     public void OpenErrorPanel(string message)
     {
+        CloseAllMenus();
         ErrorCanvas.SetActive(true);
     }
     #endregion
@@ -114,13 +157,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinLobby();
     }
 
-    public void CreateRoom(string RoomName)
+    public void CreateRoom()
     {
+        string roomName = createRoomInputField.text;
         RoomOptions roomOptions = new RoomOptions();
         roomOptions.IsOpen = isOpen;
         roomOptions.IsVisible = isVisible;
         roomOptions.MaxPlayers = 20;
-        PhotonNetwork.CreateRoom(RoomName, roomOptions);
+        PhotonNetwork.CreateRoom(roomName, roomOptions);
+        OpenRoomPanel(roomName);
     }
     #endregion
 }
