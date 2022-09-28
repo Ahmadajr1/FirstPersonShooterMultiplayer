@@ -6,6 +6,13 @@ public class Gun : MonoBehaviour
 {
     [SerializeField] private GameObject MuzzleFlash;
     [SerializeField] private float MuzzleFlashDuration;
+    [SerializeField] private float ammoCost = 6f;
+
+    public float AmmoCost
+    {
+        get { return ammoCost; }
+        set { ammoCost = value; }
+    }
 
     private float muzzleFlashTimer;
     private bool flashing = false;
