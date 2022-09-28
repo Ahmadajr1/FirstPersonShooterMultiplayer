@@ -182,8 +182,12 @@ MonoBehaviour:
   LookDownConstraint: -60
   LookUpConstraint: 60
   invertMouse: 0
-  bulletImpact: {fileID: 0}
+  bulletImpact: {fileID: 7979351004924618784, guid: fcbbef627223d664089f8962077ba5d4,
+    type: 3}
   bulletImpactDuration: 5
+  firingRate: 1
+  bulletParticleSystem: {fileID: 6327207470227396361, guid: ff56b3c0437d0714b87f704481c2ab9a,
+    type: 3}
 --- !u!1 &2973692921057010873
 GameObject:
   m_ObjectHideFlags: 0

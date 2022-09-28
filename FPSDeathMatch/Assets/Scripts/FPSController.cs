@@ -15,9 +15,11 @@ public class FPSController : MonoBehaviour
 
     [SerializeField] private GameObject bulletImpact;
     [SerializeField] private float bulletImpactDuration = 5f;
+    [SerializeField] private float firingRate = 1f;
 
     private CharacterController charController;
     private float verticalRotationStore;
+    private float firingTimer = 0f;
 
     private Camera mainCam;
 
@@ -34,8 +36,24 @@ public class FPSController : MonoBehaviour
     {
         Movement();
         MouseLook();
-        if (Input.GetButton("Fire1"))
+        if (firingTimer <= firingRate)
+            firingTimer += Time.deltaTime;
+
+        if (Input.GetButton("Fire1") && firingTimer >= firingRate)
+        {
             Shoot();
+            firingTimer = 0f;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            Cursor.lockState = CursorLockMode.None;
+        else if (Cursor.lockState == CursorLockMode.None)
+        {
+            if (Input.GetMouseButton(0))
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+        }
     }
 
     private void LateUpdate()
@@ -68,6 +86,7 @@ public class FPSController : MonoBehaviour
     private void Shoot()
     {
         Ray rayShot = mainCam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0f));
+
         if (Physics.Raycast(rayShot, out RaycastHit hit))
         {
             GameObject impact = Instantiate(bulletImpact, hit.point + (hit.normal * 0.002f), Quaternion.LookRotation(hit.normal, Vector3.up));
