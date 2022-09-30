@@ -6,7 +6,7 @@ using Photon.Pun;
 using TMPro;
 public class RoomButton : MonoBehaviour
 {
-    [SerializeField] private RoomInfo roomInfo;
+    [SerializeField] public RoomInfo roomInfo;
     [SerializeField] private TMP_Text roomName;
     public void SetRoomInfo(RoomInfo info)
     {
@@ -21,9 +21,7 @@ public class RoomButton : MonoBehaviour
     }
     public void JoinRoom()
     {
-        PhotonNetwork.JoinRoom(roomInfo.Name);
-        NetworkManager.instance.OpenLoadingPanel($"Joining Room {roomInfo.Name}");
-        Debug.Log(roomInfo.Name);
-        NetworkManager.instance.OpenRoomPanel(roomInfo.Name);
+        NetworkManager.instance.roomName = roomInfo.Name;
+        NetworkManager.instance.JoinRoom();
     }
 }

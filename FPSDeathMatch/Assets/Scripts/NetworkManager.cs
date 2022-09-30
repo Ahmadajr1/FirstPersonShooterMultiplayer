@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -23,7 +24,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     #region Canvases and UI
     [Header("Panels")]
-    [SerializeField] private GameObject LoadingPanel;
+    [SerializeField] private GameObject LoadingCanvas;
+    [SerializeField] private GameObject LoginCanvas;
     [SerializeField] private GameObject MainMenuCanvas;
     [SerializeField] private GameObject FindRoomCanvas;
     [SerializeField] private GameObject CreateRoomCanvas;
@@ -35,21 +37,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] private TextMeshProUGUI roomNameText;
     [SerializeField] private TextMeshProUGUI errorText;
     [SerializeField] private TMP_InputField createRoomInputField;
+    [SerializeField] private TMP_InputField nameInputField;
 
     [Header("References")]
     [SerializeField] private RoomButton RoomReference;
 
+    List<RoomButton> roomsList = new List<RoomButton>();
+    public string roomName;
     #endregion
 
-    List<RoomButton> RoomsList = new List<RoomButton>();
-
     #region Unity Methods
-    // Start is called before the first frame update
-    void Start()
-    {
-        loadingText.SetText("Connecting to Server");
-        PhotonNetwork.ConnectUsingSettings();
-    }
+ 
     #endregion
 
     #region PUN Callbacks
@@ -60,46 +58,55 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedLobby()
     {
-        LoadingPanel.SetActive(false);
         MainMenuCanvas.SetActive(true);
     }
     public override void OnCreatedRoom()
     {
+        OpenRoomPanel(roomName);
     }
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
-        Debug.Log($"returnCode = {returnCode}, error message = {message}");
+        OpenErrorPanel("returnCode = " + returnCode.ToString() + ", error message =" + message);
     }
     public override void OnJoinedRoom()
     {
-        Debug.Log("We have joined a room");
+        OpenRoomPanel(roomName);
     }
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        Debug.Log($"returnCode = {returnCode}, error message = {message}");
+        OpenErrorPanel("returnCode = " + returnCode.ToString() + ", error message =" + message);
     }
     public override void OnLeftRoom()
     {
+        OpenMainMenuPanel();
     }
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        foreach(RoomButton roomButton in RoomsList)
-        {
-            Destroy(roomButton.gameObject);
-        }
 
-        RoomsList.Clear();
+        List<RoomButton> buttonsToBeRemoved = new List<RoomButton>();
 
         foreach (RoomInfo roomInfo in roomList)
         {
+            foreach (RoomButton roomButton in roomsList)
+            {
+                if (roomButton.roomInfo.Name == roomInfo.Name)
+                {
+                    Destroy(roomButton.gameObject);
+                    buttonsToBeRemoved.Add(roomButton);
+                }
+            }
+
             if (roomInfo.PlayerCount < roomInfo.MaxPlayers && !roomInfo.RemovedFromList)
             {
                 RoomButton tempButton = Instantiate(RoomReference, RoomReference.transform.parent);
                 tempButton.SetRoomInfo(roomInfo);
                 tempButton.gameObject.SetActive(true);
-                RoomsList.Add(tempButton);
+                roomsList.Add(tempButton);
             }
         }
+
+        foreach (RoomButton roomButton in buttonsToBeRemoved)
+            roomsList.Remove(roomButton);
     }
     #endregion
 
@@ -107,7 +114,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #region Buttons Methods
     public void CloseAllMenus()
     {
-        LoadingPanel.SetActive(false);
+        LoginCanvas.SetActive(false);
+        LoadingCanvas.SetActive(false);
         MainMenuCanvas.SetActive(false);
         FindRoomCanvas.SetActive(false);
         CreateRoomCanvas.SetActive(false);
@@ -124,7 +132,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void OpenLoadingPanel(string message)
     {
         CloseAllMenus();
-        LoadingPanel.SetActive(true);
+        LoadingCanvas.SetActive(true);
+        loadingText.text = message;
     }
 
     public void OpenFindRoomPanel()
@@ -149,8 +158,41 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         CloseAllMenus();
         ErrorCanvas.SetActive(true);
+        errorText.text = message;
+    }
+
+    public void AssignRandomName()
+    {
+        nameInputField.text = GenerateRandomName();
+    }
+
+    public void Login()
+    {
+        if (nameInputField.text != "")
+            ConnectToServer();
     }
     #endregion
+
+    public string GenerateRandomName()
+    {
+        int randIndex1 = Random.Range(0, RandomNameGenerator.names.Length);
+        int randIndex2 = Random.Range(0, RandomNameGenerator.names.Length);
+        int randIndex3 = Random.Range(0, RandomNameGenerator.names.Length);
+        string firstName = RandomNameGenerator.names[randIndex1];
+        string middleName = RandomNameGenerator.names[randIndex2];
+        string lastName = RandomNameGenerator.names[randIndex3];
+
+        StringBuilder name = new StringBuilder();
+        name.Append(firstName + " ");
+        name.Append(middleName + " ");
+        name.Append(lastName);
+        return name.ToString();
+    }
+    private void ConnectToServer()
+    {
+        OpenLoadingPanel("Connecting to Server");
+        PhotonNetwork.ConnectUsingSettings();
+    }
 
     private void JoinTheLobby()
     {
@@ -159,13 +201,24 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
-        string roomName = createRoomInputField.text;
+        OpenLoadingPanel("Creating room...");
+        roomName = createRoomInputField.text;
         RoomOptions roomOptions = new RoomOptions();
         roomOptions.IsOpen = isOpen;
         roomOptions.IsVisible = isVisible;
         roomOptions.MaxPlayers = 20;
         PhotonNetwork.CreateRoom(roomName, roomOptions);
-        OpenRoomPanel(roomName);
+    }
+
+    public void JoinRoom()
+    {
+        OpenLoadingPanel("Joining room...");
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+    public void LeaveRoom()
+    {
+        PhotonNetwork.LeaveRoom();
     }
     #endregion
 }
