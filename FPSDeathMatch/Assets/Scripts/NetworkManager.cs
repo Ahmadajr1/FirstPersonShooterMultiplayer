@@ -41,9 +41,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     [Header("References")]
     [SerializeField] private RoomButton RoomReference;
+    [SerializeField] private TMP_Text PlayerNameReference;
+    [SerializeField] private GameObject StartGameButton;
+    [SerializeField] private string SceneName;
 
-    List<RoomButton> roomsList = new List<RoomButton>();
-    public string roomName;
+    //private globals
+    private List<RoomButton> roomsList = new List<RoomButton>();
+    private List<TMP_Text> roomPlayerList = new List<TMP_Text>();
+    private string playerName = string.Empty;
     #endregion
 
     #region Unity Methods
@@ -53,7 +58,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #region PUN Callbacks
     public override void OnConnectedToMaster()
     {
-        JoinTheLobby();        
+        JoinTheLobby();
+        PhotonNetwork.AutomaticallySyncScene = true;
     }
 
     public override void OnJoinedLobby()
@@ -62,7 +68,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnCreatedRoom()
     {
-        OpenRoomPanel(roomName);
+        OpenRoomPanel();
     }
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
@@ -70,7 +76,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
     public override void OnJoinedRoom()
     {
-        OpenRoomPanel(roomName);
+        roomNameText.text = PhotonNetwork.CurrentRoom.Name;
+        ListRoomPlayers();
+        CheckRoomMaster();
+        OpenRoomPanel();
+    }
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        CheckRoomMaster();
     }
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
@@ -80,9 +94,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         OpenMainMenuPanel();
     }
+
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        TMP_Text newPlayerName = Instantiate(PlayerNameReference, PlayerNameReference.transform.parent);
+        newPlayerName.text = newPlayer.NickName;
+        newPlayerName.gameObject.SetActive(true);
+        roomPlayerList.Add(newPlayerName);
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        ListRoomPlayers();
+    }
+
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-
         List<RoomButton> buttonsToBeRemoved = new List<RoomButton>();
 
         foreach (RoomInfo roomInfo in roomList)
@@ -147,11 +174,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         CreateRoomCanvas.SetActive(true);
     }
 
-    public void OpenRoomPanel(string roomName)
+    public void OpenRoomPanel()
     {
         CloseAllMenus();
         RoomCanvas.SetActive(true);
-        roomNameText.text = roomName;
     }
 
     public void OpenErrorPanel(string message)
@@ -169,7 +195,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void Login()
     {
         if (nameInputField.text != "")
+        {
+            playerName = nameInputField.text;
+            PhotonNetwork.NickName = playerName;
             ConnectToServer();
+        }
+    }
+
+    public void StartGame()
+    {
+        PhotonNetwork.LoadLevel(SceneName);
     }
     #endregion
 
@@ -202,7 +237,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void CreateRoom()
     {
         OpenLoadingPanel("Creating room...");
-        roomName = createRoomInputField.text;
+        string roomName = createRoomInputField.text;
         RoomOptions roomOptions = new RoomOptions();
         roomOptions.IsOpen = isOpen;
         roomOptions.IsVisible = isVisible;
@@ -210,15 +245,41 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(roomName, roomOptions);
     }
 
-    public void JoinRoom()
+    public void JoinRoom(string roomName)
     {
         OpenLoadingPanel("Joining room...");
         PhotonNetwork.JoinRoom(roomName);
     }
 
+    public void ListRoomPlayers()
+    {
+        foreach (TMP_Text text in roomPlayerList)
+            Destroy(text.gameObject);
+
+        roomPlayerList.Clear();
+
+        Player[] players = PhotonNetwork.PlayerList;
+
+        foreach (Player player in players)
+        {
+            TMP_Text newPlayerName = Instantiate(PlayerNameReference, PlayerNameReference.transform.parent);
+            newPlayerName.text = player.NickName;
+            newPlayerName.gameObject.SetActive(true);
+            roomPlayerList.Add(newPlayerName);
+        }
+    }
+
     public void LeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
+    }
+
+    public void CheckRoomMaster()
+    {
+        if (PhotonNetwork.IsMasterClient)
+            StartGameButton.SetActive(true);
+        else
+            StartGameButton.SetActive(false);
     }
     #endregion
 }

@@ -21,7 +21,6 @@ public class RoomButton : MonoBehaviour
     }
     public void JoinRoom()
     {
-        NetworkManager.instance.roomName = roomInfo.Name;
-        NetworkManager.instance.JoinRoom();
+        NetworkManager.instance.JoinRoom(roomInfo.Name);
     }
 }
