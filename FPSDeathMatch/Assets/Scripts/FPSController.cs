@@ -8,7 +8,6 @@ public class FPSController : MonoBehaviour
 {
     [Header("Reference GameObjects")]
     [SerializeField] private Transform camController;
-    [SerializeField] private UIController uiController;
 
     [Header("Character Movement")]
     [SerializeField] private float moveSpeed = 10f;
@@ -23,9 +22,9 @@ public class FPSController : MonoBehaviour
     [SerializeField] private float MaximumCharge = 20f;
     [SerializeField] private float rechargeRate = 6f;
     [SerializeField] private float depletedRechargeRate = 10f;
-    [SerializeField] private Gun gun;
-
-
+   
+    private Gun gun;
+    private UIController uiController;
     private CharacterController charController;
     private Health health;
     private float verticalRotationStore;
@@ -37,6 +36,8 @@ public class FPSController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        gun = GetComponent<Gun>();
+        uiController = GameObject.Find("Canvas").GetComponent<UIController>();
         charController = GetComponent<CharacterController>();
         health = GetComponent<Health>();
         mainCam = Camera.main;
