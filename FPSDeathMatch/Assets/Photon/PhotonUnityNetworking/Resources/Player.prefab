@@ -112,6 +112,7 @@ GameObject:
   - component: {fileID: 6950678665485060010}
   - component: {fileID: 1956766804900078199}
   - component: {fileID: 6925539440618661023}
+  - component: {fileID: 6237411474855959263}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -247,6 +248,19 @@ MonoBehaviour:
   MuzzleFlash: {fileID: 5669897512146521368}
   MuzzleFlashDuration: 0.2
   ammoCost: 6
+--- !u!114 &6237411474855959263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2973692920307618860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38680c18105f4084892c4a21cd12906d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maximumHealth: 30
 --- !u!1 &2973692921057010873
 GameObject:
   m_ObjectHideFlags: 0

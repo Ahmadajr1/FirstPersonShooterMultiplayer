@@ -52,7 +52,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #endregion
 
     #region Unity Methods
- 
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.None;
+    }
     #endregion
 
     #region PUN Callbacks

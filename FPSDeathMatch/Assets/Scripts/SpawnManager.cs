@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Photon.Pun;
 
-public class SpawnManager : MonoBehaviour
+public class SpawnManager : MonoBehaviourPunCallbacks
 {
 
     #region singleton
@@ -19,6 +19,8 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private List<Transform> spawnPoints;
 
+    private GameObject player;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -28,22 +30,22 @@ public class SpawnManager : MonoBehaviour
             SceneManager.LoadScene("Main Menu");
     }
 
-
-    public Transform GetSpawnPoint
-    {
-        get 
-        {
-            int randomIndex = Random.Range(0, spawnPoints.Count);
-            Transform returnedTransform = spawnPoints[randomIndex];
-            spawnPoints.Remove(returnedTransform);
-            return returnedTransform;
-        }
-    }
-
     public void SpawnPlayer()
     {
-        Transform spawnPoint = GetSpawnPoint;
-        Debug.Log(spawnPoint.position);
-        PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
+        Transform spawnPoint = spawnPoints[PhotonNetwork.LocalPlayer.ActorNumber - 1];
+        player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
+    }
+
+    public void Death()
+    {
+        PhotonNetwork.Destroy(player);
+        StartCoroutine(RespawnPlayer());
+    }
+
+    private IEnumerator RespawnPlayer()
+    {
+        yield return new WaitForSeconds(3);
+        Transform spawnPoint = spawnPoints[PhotonNetwork.LocalPlayer.ActorNumber - 1];
+        player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
     }
 }
